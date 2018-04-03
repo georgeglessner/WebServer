@@ -1,0 +1,7 @@
+# Ignore everything
+*
+
+# Include 
+!.gitignore
+!server.py
+!README.md
