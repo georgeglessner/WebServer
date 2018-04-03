@@ -23,8 +23,7 @@ def main():
     if log_file == 'standard output':
         log_file = False
     else:
-        with open(log_file, 'w') as log_file:
-            log_file.write('test' + '\n')
+        log_file = open(log_file, 'w')
 
     # create server
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
