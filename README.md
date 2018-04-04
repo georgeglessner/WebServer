@@ -5,9 +5,9 @@
 
 Your server should accept the following command line arguments:
 
-- `-p [port]`: Specify the port the server should run on. If no port is specified, the default should be 8080 (because without root access, we can not use the standard port 80).  
-- `-docroot [directory]`: Specify the directory from which the server should look for requested files. The default should be the directory the server was run from.  
-- `-logfile [file]`: Specify a file for log messages to be written out to. If no log file is specified, then log messages should only be printed on standard out.
+- `-p --port [port]`: Specify the port the server should run on. If no port is specified, the default should be 8080 (because without root access, we can not use the standard port 80).  
+- `-d --docroot [directory]`: Specify the directory from which the server should look for requested files. The default should be the directory the server was run from.  
+- `-l --logfile [file]`: Specify a file for log messages to be written out to. If no log file is specified, then log messages should only be printed on standard out.
 
 ## Behavior:
 
@@ -25,4 +25,4 @@ Your server must do the following:
 - You must support persistent connections. A browser may send several requests over the same HTTP connection (even before receiving any responses). If a recieved message contains a connection: close header, the connection must be closed immediately after handling the request. Otherwise, the connection must be kept open for 20 seconds, and closed if no messages have been recieved after this amount of time.
 - Unsupported headers in requests must not cause your server to fail.
 - Your server must print all requests it recieves to the log file, along with the headers (only) of responses it sends. Printing to the log must be thread-safe: a message printed in the handling of one request should not occur in the middle of a message from another.
-- You must prevent your server from accessing files outside of its docroot directory, as this is a security risk. 
+- You must prevent your server from accessing files outside of its docroot directory, as this is a security risk.
