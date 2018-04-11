@@ -20,7 +20,7 @@ import datetime
 import time
 
 
-def log_input(status_code, filePath):
+def log_input(status_code, filePath, connection):
 
     status_codes = {200:'OK', 404:'Not Found', 501:'Not Implemented'}
     log = ""
@@ -33,7 +33,7 @@ def log_input(status_code, filePath):
         server = 'Apache/2.2.14'
         contentLength = str(os.path.getsize(filePath))
         contentType = 'text/html'
-        connectionType = 'closed'
+        connectionType = connection
 
         # log reponse
         log += status + '\n'
@@ -51,7 +51,7 @@ def log_input(status_code, filePath):
         lastModified = str(time.ctime(os.path.getmtime(filePath)))
         contentLength = str(os.path.getsize(filePath))
         contentType = 'text/html'
-        connectionType = 'closed'
+        connectionType = connection
 
         # log response
         log += status + '\n'
@@ -116,6 +116,9 @@ def main():
             # receive HTTP request
             else:
                 request = s.recv(1024)
+                connection = request.split("Connection: ")
+                connection = connection[1].split('\r\n')
+                connection = connection[0]
                 if request:
                     if log_file:
                         log_file.write('\n---REQUEST---\n')
@@ -138,7 +141,7 @@ def main():
                     if not os.path.exists(filePath):
                         status_code = 404
                         filePath = './404.html'
-                        log = log_input(status_code, filePath)
+                        log = log_input(status_code, filePath, connection)
                         response = create_response(log, status_code, filePath)
                        
                         if log_file:
@@ -153,7 +156,7 @@ def main():
                             print log
                     else:
                         status_code = 200
-                        log = log_input(status_code, filePath)
+                        log = log_input(status_code, filePath, connection)
                         response = create_response(log, status_code, filePath)
 
                         if log_file:
