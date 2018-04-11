@@ -113,33 +113,34 @@ def main():
             else:
                 request = s.recv(1024)
 
-                # get connection type
-                connection = request.split("Connection: ")
-                connection = connection[1].split('\n')
-                connection = connection[0]
-
-                # get content type
-                contentType = request.split('Accept: ')
-                contentType = contentType[1].split('\n')
-                contentType = contentType[0]
-
                 if request:
+                    # get connection type
+                    connection = request.split("Connection: ")
+                    connection = connection[1].split('\n')
+                    connection = connection[0]
+
+                    # get content type
+                    contentType = request.split('Accept: ')
+                    contentType = contentType[1].split('\n')
+                    contentType = contentType[0]
+
                     if log_file:
                         log_file.write('\n---REQUEST---\n')
                         log_file.write(request)
                     else:
                         print '\n---REQUEST---\n'
                         print request
+
                     # Get requested filename
                     if 'GET' not in request:
                         status_code = 501
                     else:
-                        request = request.split('GET')
-                        request = request[1]
-                        request = request.split('HTTP')
-                        request = request[0].strip()
+                        file = request.split('GET')
+                        file = file[1]
+                        file = file.split('HTTP')
+                        file = file[0].strip()
 
-                    filePath = docroot + request
+                    filePath = docroot + file
 
                     # file doesn't exist in current directory 
                     if not os.path.exists(filePath):
