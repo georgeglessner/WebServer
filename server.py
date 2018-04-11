@@ -20,7 +20,7 @@ import datetime
 import time
 
 
-def log_input(status_code, filePath, connection):
+def log_input(status_code, filePath, connection, contentType):
 
     status_codes = {200:'OK', 404:'Not Found', 501:'Not Implemented'}
     log = ""
@@ -30,15 +30,13 @@ def log_input(status_code, filePath, connection):
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
-        server = 'Apache/2.2.14'
         contentLength = str(os.path.getsize(filePath))
-        contentType = 'text/html'
+        contentType = contentType
         connectionType = connection
 
         # log reponse
         log += status + '\n'
         log += 'Date: ' + date + '\n'
-        log += 'Server: ' + server + '\n'
         log += 'Content-Length: ' + contentLength + '\n'
         log += 'Content-Type: ' + contentType + '\n'
         log += 'Connection: ' + connectionType + '\n' 
@@ -47,16 +45,14 @@ def log_input(status_code, filePath, connection):
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
-        server = 'Apache/2.2.14'
         lastModified = str(time.ctime(os.path.getmtime(filePath)))
         contentLength = str(os.path.getsize(filePath))
-        contentType = 'text/html'
+        contentType = contentType
         connectionType = connection
 
         # log response
         log += status + '\n'
         log += 'Date: ' + date + '\n'
-        log += 'Server: ' + server + '\n'
         log += 'Last-Modified: ' + lastModified + '\n'
         log += 'Content-Length: ' + contentLength + '\n'
         log += 'Content-Type: ' + contentType + '\n'
@@ -116,9 +112,17 @@ def main():
             # receive HTTP request
             else:
                 request = s.recv(1024)
+
+                # get connection type
                 connection = request.split("Connection: ")
-                connection = connection[1].split('\r\n')
+                connection = connection[1].split('\n')
                 connection = connection[0]
+
+                # get content type
+                contentType = request.split('Accept: ')
+                contentType = contentType[1].split('\n')
+                contentType = contentType[0]
+
                 if request:
                     if log_file:
                         log_file.write('\n---REQUEST---\n')
@@ -141,7 +145,7 @@ def main():
                     if not os.path.exists(filePath):
                         status_code = 404
                         filePath = './404.html'
-                        log = log_input(status_code, filePath, connection)
+                        log = log_input(status_code, filePath, connection, contentType)
                         response = create_response(log, status_code, filePath)
                        
                         if log_file:
@@ -156,7 +160,7 @@ def main():
                             print log
                     else:
                         status_code = 200
-                        log = log_input(status_code, filePath, connection)
+                        log = log_input(status_code, filePath, connection, contentType)
                         response = create_response(log, status_code, filePath)
 
                         if log_file:
