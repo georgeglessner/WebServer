@@ -10,12 +10,75 @@
 '''
 
 from docopt import docopt
+from wsgiref.handlers import format_date_time
+from time import mktime
 import socket
 import select
 import Queue
 import os
 import datetime
 import time
+
+
+def log_input(status_code, filePath):
+
+    status_codes = {200:'OK', 404:'Not Found', 501:'Not Implemented'}
+    log = ""
+
+    #TODO: still have some hard coded values
+    if status_code in (404,501):
+        status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
+        now = datetime.datetime.now()
+        date = str(format_date_time(mktime(now.timetuple())))
+        server = 'Apache/2.2.14'
+        contentLength = str(os.path.getsize(filePath))
+        contentType = 'text/html'
+        connectionType = 'closed'
+
+        # log reponse
+        log += status + '\n'
+        log += 'Date: ' + date + '\n'
+        log += 'Server: ' + server + '\n'
+        log += 'Content-Length: ' + contentLength + '\n'
+        log += 'Content-Type: ' + contentType + '\n'
+        log += 'Connection: ' + connectionType + '\n' 
+
+    else:
+        status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
+        now = datetime.datetime.now()
+        date = str(format_date_time(mktime(now.timetuple())))
+        server = 'Apache/2.2.14'
+        lastModified = str(time.ctime(os.path.getmtime(filePath)))
+        contentLength = str(os.path.getsize(filePath))
+        contentType = 'text/html'
+        connectionType = 'closed'
+
+        # log response
+        log += status + '\n'
+        log += 'Date: ' + date + '\n'
+        log += 'Server: ' + server + '\n'
+        log += 'Last-Modified: ' + lastModified + '\n'
+        log += 'Content-Length: ' + contentLength + '\n'
+        log += 'Content-Type: ' + contentType + '\n'
+        log += 'Connection: ' + connectionType + '\n'    
+
+    return log
+
+def create_response(log, status_code, filePath):
+
+    # print error page
+    if status_code == 404:
+        with open ('404.html', "r") as myfile:
+                    data=myfile.read()
+    # send page contents
+    else:
+        with open (filePath, "r") as myfile:
+                    data=myfile.read()
+    
+    # format response
+    response = log + '\r\n' + data
+
+    return response
 
 def main():
 
@@ -38,6 +101,7 @@ def main():
     outputs = []
     response_queue = {}         
     request = ''
+    status_code = 0
 
     while inputs:
         readable, writable, exceptional = select.select(
@@ -53,36 +117,62 @@ def main():
             else:
                 request = s.recv(1024)
                 if request:
+                    if log_file:
+                        log_file.write('\n---REQUEST---\n')
+                        log_file.write(request)
+                    else:
+                        print '\n---REQUEST---\n'
+                        print request
                     # Get requested filename
-                    request = request.split('GET')
-                    request = request[1]
-                    request = request.split('HTTP')
-                    request = request[0].strip()
+                    if 'GET' not in request:
+                        status_code = 501
+                    else:
+                        request = request.split('GET')
+                        request = request[1]
+                        request = request.split('HTTP')
+                        request = request[0].strip()
 
                     filePath = docroot + request
-                    if not os.path.exists(filePath):
-                        print 'File does not exist'
-                        #TODO: send error responsh
-                    else:
-                        print 'File exists!'
-                        #TODO: remove hard-code, format dates, server?
-                        status = 'HTTP/1.1 200 OK'
-                        date = datetime.datetime.utcnow()
-                        server = 'Apache/2.2.14'
-                        lastModified = time.ctime(os.path.getmtime(filePath))
-                        contentLength = os.path.getsize(filePath)
-                        contentType = 'text/html'
-                        connectionType = 'closed'
 
-                    # test print out
-                    print request
-                    print status
-                    print date
-                    print server
-                    print lastModified
-                    print contentLength
-                    print contentType
-                    print connectionType
+                    # file doesn't exist in current directory 
+                    if not os.path.exists(filePath):
+                        status_code = 404
+                        filePath = './404.html'
+                        log = log_input(status_code, filePath)
+                        response = create_response(log, status_code, filePath)
+                       
+                        if log_file:
+                            log_file.write('\n---RESPONSE---\n')
+                            log_file.write(log)
+                            response_queue[s].put(response)
+                            outputs.append(s)
+                        else:
+                            response_queue[s].put(response)
+                            outputs.append(s)
+                            print '---RESPONSE---'
+                            print log
+                    else:
+                        status_code = 200
+                        log = log_input(status_code, filePath)
+                        response = create_response(log, status_code, filePath)
+
+                        if log_file:
+                            log_file.write('\n---RESPONSE---\n')
+                            log_file.write(log) 
+                            response_queue[s].put(response)
+                            outputs.append(s)
+                        else:
+                            response_queue[s].put(response)
+                            outputs.append(s)
+                            print '---RESPONSE---'
+                            print log
+        for s in writable:
+            try:
+                next_msg = response_queue[s].get_nowait()
+            except Queue.Empty:
+                outputs.remove(s)
+            else:
+                s.send(next_msg)
 
 
 if __name__ == '__main__':
