@@ -21,12 +21,18 @@ import time
 
 
 def log_input(status_code, filePath, connection, contentType):
-
+    
+    content_types = {'pdf':'application/pdf', 'txt':'txt/plain', 'jpeg':'image/jpeg', 'jpg':'image/jpeg', 'html':'txt/html'}
     status_codes = {200:'OK', 404:'Not Found', 501:'Not Implemented'}
     log = ""
 
+    # determin file extension
+    extension = filePath.split('.')
+    extension = extension[1]
+    
     #TODO: still have some hard coded values
     if status_code in (404,501):
+        contentType = content_types.get('html')
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
@@ -42,6 +48,7 @@ def log_input(status_code, filePath, connection, contentType):
         log += 'Connection: ' + connectionType + '\n' 
 
     else:
+        contentType = content_types.get(extension)
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
