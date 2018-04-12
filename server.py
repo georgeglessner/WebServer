@@ -34,7 +34,6 @@ def log_input(status_code, filePath, connection, contentType):
         contentType = content_types.get(extension)
     
     if status_code in (404,501):
-        # contentType = content_types.get('html')
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
@@ -49,7 +48,6 @@ def log_input(status_code, filePath, connection, contentType):
         log += 'Connection: ' + connectionType + '\n' 
 
     else:
-        # contentType = content_types.get(extension)
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
