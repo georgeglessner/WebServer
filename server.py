@@ -22,7 +22,7 @@ import time
 
 def log_input(status_code, filePath, connection, contentType):
 
-    content_types = {'pdf':'application/pdf', 'txt':'text/html', 'jpeg':'image/jpeg', 'jpg':'image/jpeg'}
+    content_types = {'pdf':'application/pdf', 'txt':'text/html', 'jpeg':'image/jpeg', 'jpg':'image/jpeg', 'gif':'image/gif', 'css':'text/css'}
     status_codes = {200:'OK', 404:'Not Found', 501:'Not Implemented'}
     log = ""
 
@@ -31,7 +31,7 @@ def log_input(status_code, filePath, connection, contentType):
     extension = extension[2]
 
     # cross-browser compatability
-    if extension in ('pdf', 'txt', 'jpeg', 'jpg'):
+    if extension in ('pdf', 'txt', 'jpeg', 'jpg', 'gif', 'css'):
         contentType = content_types.get(extension)
     
     # error codes
@@ -170,6 +170,7 @@ def main():
                         file = file.split('HTTP')
                         file = file[0].strip()
 
+                        print docroot, file
                         # create file path
                         filePath = docroot + file
 
