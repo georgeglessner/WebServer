@@ -183,7 +183,7 @@ def main():
                                 print '---RESPONSE---'
                                 print log
 
-                        if os.path.exists(filePath):
+                        elif os.path.exists(filePath):
                             status_code = 200
                             log = log_input(status_code, filePath, connection, contentType)
                             response = create_response(log, status_code, filePath)
