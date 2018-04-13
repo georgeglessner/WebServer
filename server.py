@@ -71,6 +71,9 @@ def create_response(log, status_code, filePath):
     if status_code == 404:
         with open ('./404.html', "r") as myfile:
             data=myfile.read()
+    if status_code == 501:
+        with open ('./501.html', "r") as myfile:
+            data=myfile.read()
     # send page contents
     else:
         with open (filePath, "r") as myfile:
@@ -115,7 +118,7 @@ def main():
                 inputs.append(client_connection)
                 response_queue[client_connection] = Queue.Queue()
             # receive HTTP request
-            else:
+            else:                
                 request = s.recv(1024)
 
                 if request:
@@ -139,33 +142,8 @@ def main():
                     # Get requested filename
                     if 'GET' not in request:
                         status_code = 501
-                    else:
-                        file = request.split('GET')
-                        file = file[1]
-                        file = file.split('HTTP')
-                        file = file[0].strip()
-
-                    filePath = docroot + file
-
-                    # file doesn't exist in current directory 
-                    if not os.path.exists(filePath):
-                        status_code = 404
-                        filePath = './404.html'
-                        log = log_input(status_code, filePath, connection, contentType)
-                        response = create_response(log, status_code, filePath)
-                       
-                        if log_file:
-                            log_file.write('\n---RESPONSE---\n')
-                            log_file.write(log)
-                            response_queue[s].put(response)
-                            outputs.append(s)
-                        else:
-                            response_queue[s].put(response)
-                            outputs.append(s)
-                            print '---RESPONSE---'
-                            print log
-                    else:
-                        status_code = 200
+                        filePath = './501.html'
+                        connection = 'keep-alive'
                         log = log_input(status_code, filePath, connection, contentType)
                         response = create_response(log, status_code, filePath)
 
@@ -179,6 +157,47 @@ def main():
                             outputs.append(s)
                             print '---RESPONSE---'
                             print log
+                    else:
+                        file = request.split('GET')
+                        file = file[1]
+                        file = file.split('HTTP')
+                        file = file[0].strip()
+
+                        filePath = docroot + file
+
+                        # file doesn't exist in current directory 
+                        if not os.path.exists(filePath):
+                            status_code = 404
+                            filePath = './404.html'
+                            log = log_input(status_code, filePath, connection, contentType)
+                            response = create_response(log, status_code, filePath)
+                           
+                            if log_file:
+                                log_file.write('\n---RESPONSE---\n')
+                                log_file.write(log)
+                                response_queue[s].put(response)
+                                outputs.append(s)
+                            else:
+                                response_queue[s].put(response)
+                                outputs.append(s)
+                                print '---RESPONSE---'
+                                print log
+
+                        if os.path.exists(filePath):
+                            status_code = 200
+                            log = log_input(status_code, filePath, connection, contentType)
+                            response = create_response(log, status_code, filePath)
+
+                            if log_file:
+                                log_file.write('\n---RESPONSE---\n')
+                                log_file.write(log) 
+                                response_queue[s].put(response)
+                                outputs.append(s)
+                            else:
+                                response_queue[s].put(response)
+                                outputs.append(s)
+                                print '---RESPONSE---'
+                                print log
         for s in writable:
             try:
                 next_msg = response_queue[s].get_nowait()
@@ -186,6 +205,13 @@ def main():
                 outputs.remove(s)
             else:
                 s.send(next_msg)
+
+        for s in exceptional:
+            inputs.remove(s)
+            if s in outputs:
+                outputs.remove(s)
+            s.close()
+            del response_queue[s]
 
 
 if __name__ == '__main__':
