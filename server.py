@@ -26,21 +26,24 @@ def log_input(status_code, filePath, connection, contentType):
     status_codes = {200:'OK', 404:'Not Found', 501:'Not Implemented'}
     log = ""
 
-    # determin file extension
+    # determine file extension
     extension = filePath.split('.')
     extension = extension[2]
 
+    # cross-browser compatability
     if extension in ('pdf', 'txt', 'jpeg', 'jpg'):
         contentType = content_types.get(extension)
     
+    # error codes
     if status_code in (404,501):
+        # format response
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
         contentLength = str(os.path.getsize(filePath))
         connectionType = connection
 
-        # log reponse
+        # log response
         log += status + '\n'
         log += 'Date: ' + date + '\n'
         log += 'Content-Length: ' + contentLength + '\n'
@@ -48,6 +51,7 @@ def log_input(status_code, filePath, connection, contentType):
         log += 'Connection: ' + connectionType + '\n' 
 
     else:
+        # format response
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
@@ -67,10 +71,11 @@ def log_input(status_code, filePath, connection, contentType):
 
 def create_response(log, status_code, filePath):
 
-    # print error page
+    # file not found
     if status_code == 404:
         with open ('./404.html', "r") as myfile:
             data=myfile.read()
+    # not implemented
     if status_code == 501:
         with open ('./501.html', "r") as myfile:
             data=myfile.read()
@@ -139,7 +144,7 @@ def main():
                         print '\n---REQUEST---\n'
                         print request
 
-                    # Get requested filename
+                    # unsupported request
                     if 'GET' not in request:
                         status_code = 501
                         filePath = './501.html'
@@ -157,12 +162,15 @@ def main():
                             outputs.append(s)
                             print '---RESPONSE---'
                             print log
+                    # GET request
                     else:
+                        # get requested file 
                         file = request.split('GET')
                         file = file[1]
                         file = file.split('HTTP')
                         file = file[0].strip()
 
+                        # create file path
                         filePath = docroot + file
 
                         # file doesn't exist in current directory 
@@ -182,7 +190,7 @@ def main():
                                 outputs.append(s)
                                 print '---RESPONSE---'
                                 print log
-
+                        # file exists
                         elif os.path.exists(filePath):
                             status_code = 200
                             log = log_input(status_code, filePath, connection, contentType)
