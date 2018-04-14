@@ -18,13 +18,6 @@ import Queue
 import os
 import datetime
 import time
-import signal
-
-def sigint_handler(signum, frame):
-    print '\nQuitting...'
-    sys.exit(1)
-
-signal.signal(signal.SIGINT, sigint_handler)
 
 
 def log_input(status_code, file_path, connection, content_type):
@@ -97,6 +90,7 @@ def create_response(log, status_code, file_path):
     return response
 
 def main():
+    global server
 
     # get values of arguments
     docroot = arguments.get('--docroot')
