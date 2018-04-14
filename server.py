@@ -18,21 +18,28 @@ import Queue
 import os
 import datetime
 import time
+import signal
+
+def sigint_handler(signum, frame):
+    print '\nQuitting...'
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, sigint_handler)
 
 
-def log_input(status_code, filePath, connection, contentType):
+def log_input(status_code, file_path, connection, content_type):
 
     content_types = {'pdf':'application/pdf', 'txt':'text/html', 'jpeg':'image/jpeg', 'jpg':'image/jpeg', 'gif':'image/gif', 'css':'text/css'}
     status_codes = {200:'OK', 404:'Not Found', 501:'Not Implemented'}
     log = ""
 
     # determine file extension
-    extension = filePath.split('.')
+    extension = file_path.split('.')
     extension = extension[2]
 
     # cross-browser compatability
     if extension in ('pdf', 'txt', 'jpeg', 'jpg', 'gif', 'css'):
-        contentType = content_types.get(extension)
+        content_type = content_types.get(extension)
     
     # error codes
     if status_code in (404,501):
@@ -40,36 +47,36 @@ def log_input(status_code, filePath, connection, contentType):
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
-        contentLength = str(os.path.getsize(filePath))
-        connectionType = connection
+        content_length = str(os.path.getsize(file_path))
+        connection_type = connection
 
         # log response
         log += status + '\n'
         log += 'Date: ' + date + '\n'
-        log += 'Content-Length: ' + contentLength + '\n'
-        log += 'Content-Type: ' + contentType + '\n'
-        log += 'Connection: ' + connectionType + '\n' 
+        log += 'Content-Length: ' + content_length + '\n'
+        log += 'Content-Type: ' + content_type + '\n'
+        log += 'Connection: ' + connection_type + '\n' 
 
     else:
         # format response
         status = 'HTTP/1.1 %i %s' % (status_code, status_codes.get(status_code))
         now = datetime.datetime.now()
         date = str(format_date_time(mktime(now.timetuple())))
-        lastModified = str(time.ctime(os.path.getmtime(filePath)))
-        contentLength = str(os.path.getsize(filePath))
-        connectionType = connection
+        last_modified = str(time.ctime(os.path.getmtime(file_path)))
+        content_length = str(os.path.getsize(file_path))
+        connection_type = connection
 
         # log response
         log += status + '\n'
         log += 'Date: ' + date + '\n'
-        log += 'Last-Modified: ' + lastModified + '\n'
-        log += 'Content-Length: ' + contentLength + '\n'
-        log += 'Content-Type: ' + contentType + '\n'
-        log += 'Connection: ' + connectionType + '\n'    
+        log += 'Last-Modified: ' + last_modified + '\n'
+        log += 'Content-Length: ' + content_length + '\n'
+        log += 'Content-Type: ' + content_type + '\n'
+        log += 'Connection: ' + connection_type + '\n'    
 
     return log
 
-def create_response(log, status_code, filePath):
+def create_response(log, status_code, file_path):
 
     # file not found
     if status_code == 404:
@@ -81,7 +88,7 @@ def create_response(log, status_code, filePath):
             data=myfile.read()
     # send page contents
     else:
-        with open (filePath, "r") as myfile:
+        with open (file_path, "r") as myfile:
             data=myfile.read()
     
     # format response
@@ -103,7 +110,8 @@ def main():
         log_file = open(log_file, 'w')
 
     # create server
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+     = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(('localhost', port))
     server.listen(1)
     inputs = [server]
@@ -133,9 +141,9 @@ def main():
                     connection = connection[0]
 
                     # get content type
-                    contentType = request.split('Accept: ')
-                    contentType = contentType[1].split('\n')
-                    contentType = contentType[0]
+                    content_type = request.split('Accept: ')
+                    content_type = content_type[1].split('\n')
+                    content_type = content_type[0]
 
                     if log_file:
                         log_file.write('\n---REQUEST---\n')
@@ -147,10 +155,10 @@ def main():
                     # unsupported request
                     if 'GET' not in request:
                         status_code = 501
-                        filePath = './501.html'
+                        file_path = './501.html'
                         connection = 'keep-alive'
-                        log = log_input(status_code, filePath, connection, contentType)
-                        response = create_response(log, status_code, filePath)
+                        log = log_input(status_code, file_path, connection, content_type)
+                        response = create_response(log, status_code, file_path)
 
                         if log_file:
                             log_file.write('\n---RESPONSE---\n')
@@ -172,14 +180,14 @@ def main():
 
                         print docroot, file
                         # create file path
-                        filePath = docroot + file
+                        file_path = docroot + file
 
                         # file doesn't exist in current directory 
-                        if not os.path.exists(filePath):
+                        if not os.path.exists(file_path):
                             status_code = 404
-                            filePath = './404.html'
-                            log = log_input(status_code, filePath, connection, contentType)
-                            response = create_response(log, status_code, filePath)
+                            file_path = './404.html'
+                            log = log_input(status_code, file_path, connection, content_type)
+                            response = create_response(log, status_code, file_path)
                            
                             if log_file:
                                 log_file.write('\n---RESPONSE---\n')
@@ -192,10 +200,10 @@ def main():
                                 print '---RESPONSE---'
                                 print log
                         # file exists
-                        elif os.path.exists(filePath):
+                        elif os.path.exists(file_path):
                             status_code = 200
-                            log = log_input(status_code, filePath, connection, contentType)
-                            response = create_response(log, status_code, filePath)
+                            log = log_input(status_code, file_path, connection, content_type)
+                            response = create_response(log, status_code, file_path)
 
                             if log_file:
                                 log_file.write('\n---RESPONSE---\n')
