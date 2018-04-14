@@ -111,7 +111,7 @@ def main():
 
     # create server
     
-     = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(('localhost', port))
     server.listen(1)
     inputs = [server]
