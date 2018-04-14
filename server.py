@@ -90,7 +90,6 @@ def create_response(log, status_code, file_path):
     return response
 
 def main():
-    global server
 
     # get values of arguments
     docroot = arguments.get('--docroot')
