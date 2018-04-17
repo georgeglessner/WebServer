@@ -38,8 +38,13 @@ def log_input(status_code, file_path, connection, content_type):
     log = ""
 
     # determine file extension
-    extension = file_path.split('.')
-    extension = extension[1]
+    if './' in file_path:
+        extension = file_path.split('.')
+        extension = extension[2]
+    else:
+        extension = file_path.split('.')
+        print extension
+        extension = extension[1]
 
     # cross-browser compatability
     if extension in ('pdf', 'txt', 'jpeg', 'jpg', 'gif', 'css'):
