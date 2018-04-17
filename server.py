@@ -29,7 +29,12 @@ def log_input(status_code, file_path, connection, content_type):
         'gif': 'image/gif',
         'css': 'text/css'
     }
-    status_codes = {200: 'OK', 404: 'Not Found', 501: 'Not Implemented'}
+    status_codes = {
+        200: 'OK',
+        304: 'Not Modified',
+        404: 'Not Found',
+        501: 'Not Implemented'
+    }
     log = ""
 
     # determine file extension
@@ -99,6 +104,17 @@ def create_response(log, status_code, file_path):
     return response
 
 
+def check_if_modified(file_path, check_date):
+
+    # compare content's last modified date
+    if str(time.ctime(os.path.getmtime(file_path))) == check_date:
+        status_code = 304
+    else:
+        status_code = 200
+
+    return status_code
+
+
 def main():
 
     # get values of arguments
@@ -113,7 +129,6 @@ def main():
         log_file = open(log_file, 'w')
 
     # create server
-
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(('localhost', port))
     server.listen(1)
@@ -182,7 +197,6 @@ def main():
                         file = file.split('HTTP')
                         file = file[0].strip()
 
-                        print docroot, file
                         # create file path
                         file_path = docroot + file
 
@@ -205,9 +219,20 @@ def main():
                                 outputs.append(s)
                                 print '---RESPONSE---'
                                 print log
+
                         # file exists
                         elif os.path.exists(file_path):
+
                             status_code = 200
+
+                            if 'If-Modified-Since' in request:
+                                check_date = request.split(
+                                    'If-Modified-Since: ')
+                                check_date = check_date[1].split('\n')
+                                check_date = check_date[0]
+                                status_code = check_if_modified(
+                                    file_path, check_date)
+
                             log = log_input(status_code, file_path, connection,
                                             content_type)
                             response = create_response(log, status_code,
