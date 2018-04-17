@@ -39,7 +39,7 @@ def log_input(status_code, file_path, connection, content_type):
 
     # determine file extension
     extension = file_path.split('.')
-    extension = extension[2]
+    extension = extension[1]
 
     # cross-browser compatability
     if extension in ('pdf', 'txt', 'jpeg', 'jpg', 'gif', 'css'):
