@@ -107,7 +107,7 @@ def create_response(log, status_code, file_path):
 def check_if_modified(file_path, check_date):
 
     # compare content's last modified date
-    if str(time.ctime(os.path.getmtime(file_path))) == check_date:
+    if str(time.ctime(os.path.getmtime(file_path))).strip() == check_date.strip():
         status_code = 304
     else:
         status_code = 200
